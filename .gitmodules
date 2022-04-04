@@ -1,0 +1,3 @@
+[submodule "esp-idf-prom/prometheus-client-c"]
+	path = esp-idf-prom/prometheus-client-c
+	url = https://github.com/digitalocean/prometheus-client-c
