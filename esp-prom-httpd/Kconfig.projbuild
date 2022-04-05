@@ -1,0 +1,7 @@
+menu "esp-prom configuration"
+  config PROM_DEFAULT_METRICS
+    bool "Enable default metrics"
+  help
+    Exposes some helpful metrics like heap memory usage
+  default y
+endmenu

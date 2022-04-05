@@ -11,8 +11,11 @@
 #include "esp_check.h"
 #include "esp_log.h"
 #include "esp_http_server.h"
+#include "task.h"
 
+#ifdef CONFIG_PROM_DEFAULT_METRICS
 #include "default-metrics.h"
+#endif
 
 #include "prom.h"
 
@@ -23,8 +26,12 @@ prom_collector_registry_t *PROM_ACTIVE_REGISTRY;
 static const char *ESP_PROM_HTTPD_TAG = "esp-prom-httpd";
 
 /* Handler for Prometheus monitoring endpoint */
-static esp_err_t prom_metrics_handler(httpd_req_t *req) {
+static esp_err_t prom_metrics_handler(httpd_req_t *req)
+{
+#ifdef CONFIG_PROM_DEFAULT_METRICS
     prom_counter_inc(request_counter, NULL);
+#endif
+
     const char *buf = prom_collector_registry_bridge(PROM_ACTIVE_REGISTRY);
     httpd_resp_set_type(req, "text/plain");
     httpd_resp_sendstr(req, buf);
@@ -32,20 +39,23 @@ static esp_err_t prom_metrics_handler(httpd_req_t *req) {
     return ESP_OK;
 }
 
-
-esp_err_t esp_prom_start_httpd(void)
+httpd_handle_t esp_prom_start_httpd(httpd_handle_t server)
 {
     PROM_ACTIVE_REGISTRY = PROM_COLLECTOR_REGISTRY_DEFAULT;
 
-    httpd_handle_t server = NULL;
-    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.uri_match_fn = httpd_uri_match_wildcard;
+    if (!server)
+    {
+        httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+        config.uri_match_fn = httpd_uri_match_wildcard;
 
-    ESP_LOGI(ESP_PROM_HTTPD_TAG, "Starting HTTP Server");
-    if (httpd_start(&server, &config) != ESP_OK) {
-        ESP_LOGE(ESP_PROM_HTTPD_TAG, "Failed to start HTTP Server");
-        return ESP_FAIL;
-    } 
+        ESP_LOGI(ESP_PROM_HTTPD_TAG, "Starting HTTP Server");
+        if (httpd_start(&server, &config) != ESP_OK)
+        {
+            ESP_LOGE(ESP_PROM_HTTPD_TAG, "Failed to start HTTP Server");
+            return ESP_FAIL;
+        }
+    }
+
     /* URI handler Prometheus monitoring endpoint */
     httpd_uri_t prom_get_uri = {
         .uri = "/metrics",
