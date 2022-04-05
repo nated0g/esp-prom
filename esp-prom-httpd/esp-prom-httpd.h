@@ -1,5 +1,6 @@
 #include "esp_http_server.h"
 
+prom_collector_registry_t *PROM_ACTIVE_REGISTRY;
 /**
  * @brief Starts Prometheus endpoint at @c /metrics
  * Pass in an @p server if you have an exising server handle, otherwise pass

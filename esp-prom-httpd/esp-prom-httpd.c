@@ -11,7 +11,6 @@
 #include "esp_check.h"
 #include "esp_log.h"
 #include "esp_http_server.h"
-#include "task.h"
 
 #ifdef CONFIG_PROM_DEFAULT_METRICS
 #include "default-metrics.h"
@@ -21,7 +20,6 @@
 
 #include "esp-prom-httpd.h"
 
-prom_collector_registry_t *PROM_ACTIVE_REGISTRY;
 
 static const char *ESP_PROM_HTTPD_TAG = "esp-prom-httpd";
 
@@ -42,6 +40,10 @@ static esp_err_t prom_metrics_handler(httpd_req_t *req)
 httpd_handle_t esp_prom_start_httpd(httpd_handle_t server)
 {
     PROM_ACTIVE_REGISTRY = PROM_COLLECTOR_REGISTRY_DEFAULT;
+
+    #ifdef CONFIG_PROM_DEFAULT_METRICS
+    default_metrics_init();
+    #endif
 
     if (!server)
     {
